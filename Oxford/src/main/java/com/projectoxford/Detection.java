@@ -49,18 +49,12 @@ public class Detection {
 		   HttpResponse response = httpclient.execute(request);
 		   HttpEntity entity = response.getEntity();
 		   String responseStatus=String.valueOf(response.getStatusLine());
-
 		   if (responseStatus.indexOf("200")!=-1) {		
 		      String jsonStr=EntityUtils.toString(entity);
 		      jsonStr=jsonStr.substring(1,jsonStr.length()-1);
 		      this.person=JSON.parseObject(jsonStr,Person.class);
 		      err=false;
-		   }
-		   if(responseStatus.indexOf("429")!=-1){
-			   System.out.println("rate time is out ,wait for a minute.....");
-			   Thread.sleep(40000);
-			   System.out.println("end");
-		   }
+		   }		   
 		}
 		catch (Exception e)
 		{

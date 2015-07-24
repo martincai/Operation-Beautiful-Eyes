@@ -9,4 +9,5 @@ public class Config {
 	final static String SASUrl=".servicebus.chinacloudapi.cn";
 	final static String Subscription_key="7184de8434ce429788cc5b6320182368";
 	static String datetime="2015-07-15";
+	final static String PersonGroupId="opentech";
 }
