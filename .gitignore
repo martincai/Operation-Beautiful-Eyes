@@ -35,6 +35,8 @@ local.properties
 proguard/
 
 # Log Files
+log/
+logs/
 *.log
 
 # Compiled Object files
