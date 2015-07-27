@@ -5,16 +5,21 @@ import os, glob, sys, getopt, time, datetime, operator, logging
 # Set up logging
 logging.basicConfig(filename='logs/azure_storage.log', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
-# Define Azure BLOB service
+# Define Azure BLOB and Service Bus services
 from azure.storage import BlobService
+from azure.servicebus import ServiceBusService, Message, Topic, Rule, DEFAULT_RULE_NAME
 azure_storage_acct_name = ''
 azure_storage_acct_key = ''
 azure_storage_acct_container = ''
+azure_servicebus_namespace = ''
+azure_servicebus_key_name = ''
+azure_servicebus_key_value = ''
+azure_servicebus_queue = ''
 sleep_time = 0.0
 try:
-   opts, args = getopt.getopt(sys.argv[1:], "n:k:c:s:")
+   opts, args = getopt.getopt(sys.argv[1:], "n:k:c:p:b:v:q:s:")
 except getopt.GetoptError:
-   print 'Argument error! Usage: azure_storage.py -n account_name -k account_key -c container_name -s sleep_second'
+   print 'Argument error! Usage: azure_storage.py -n account_name -k account_key -c container_name -p servicebus_namespace -b servicebus_keyname -v servicebus_keyvalue -q servicebus_queue -s sleep_second'
    logging.debug('Argument error!')
    sys.exit(2)
 for opt, arg in opts:
@@ -24,10 +29,20 @@ for opt, arg in opts:
       azure_storage_acct_key = arg
    elif opt == '-c':
       azure_storage_acct_container = arg
+   elif opt == '-p':
+      azure_servicebus_namespace = arg
+   elif opt == '-b':
+      azure_servicebus_key_name = arg
+   elif opt == '-v':
+      azure_servicebus_key_value = arg
+   elif opt == '-q':
+      azure_servicebus_queue = arg
    elif opt == '-s':
       sleep_time = float(arg)
 blob_service = BlobService(account_name=azure_storage_acct_name, account_key=azure_storage_acct_key)
-logging.debug('Azure BLOB service created.')
+logging.debug('Azure storage connection created.')
+bus_service = ServiceBusService(service_namespace=azure_servicebus_namespace, shared_access_key_name=azure_servicebus_key_name, shared_access_key_value=azure_servicebus_key_value)
+logging.debug('Azure service bus connection created.')
 
 # Define method to get the oldest file
 # Set _invert to True for getting the youngest file
@@ -63,12 +78,15 @@ while True:
       img_filename = os.path.basename(img_filefullpath)
       # Upload the oldest image
       blob_service.put_block_blob_from_path(azure_storage_acct_container, img_filename, img_filefullpath, x_ms_blob_content_type='image/jpeg')
-      logging.debug('Uploaded to http://%s.blob.core.windows.net/%s/%s', azure_storage_acct_name, azure_storage_acct_container, img_filename)
+      img_azureblob_url = 'http://'+azure_storage_acct_name+'.blob.core.windows.net/'+azure_storage_acct_container+'/'+img_filename
+      logging.debug('Uploaded to %s', img_azureblob_url)
+      msg = Message(img_azureblob_url)
+      bus_service.send_queue_message(azure_servicebus_queue, msg)
       # Remove the image after uploading
       os.remove(img_filefullpath)
       # If need to sleep for more than 1 second, sleep
-      if sleep_time > 1:
-         time.sleep(sleep_time-1)
+      #if sleep_time > 1:
+      #   time.sleep(sleep_time-1)
 
 # List all blobs
 #blobs = blob_service.list_blobs('public')
