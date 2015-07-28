@@ -1,48 +1,54 @@
 #!/usr/bin/python
 
-import os, glob, sys, getopt, time, datetime, operator, logging
+import os, subprocess, glob, sys, getopt, time, datetime, operator, logging
 
 # Set up logging
 logging.basicConfig(filename='logs/azure_storage.log', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
-# Define Azure BLOB and Service Bus services
+# Define Azure BLOB, Service Bus, OpenIOT variables
 from azure.storage import BlobService
-from azure.servicebus import ServiceBusService, Message, Topic, Rule, DEFAULT_RULE_NAME
-azure_storage_acct_name = ''
-azure_storage_acct_key = ''
-azure_storage_acct_container = ''
-azure_servicebus_namespace = ''
-azure_servicebus_key_name = ''
-azure_servicebus_key_value = ''
-azure_servicebus_queue = ''
-sleep_time = 0.0
+#from azure.servicebus import ServiceBusService, Message, Topic, Rule, DEFAULT_RULE_NAME
+azure_storage_acct_name = 'cailang'
+azure_storage_acct_key = '0RyEVa+Vi1oOFDzjafT+R04MVb5dDKDJOz2sZn9VRK61TFXnFNIlvAKQCmX6tbaRYtJ79BXTJvysdvnywJIztg=='
+azure_storage_acct_container = 'public'
+#azure_servicebus_namespace = 'obe-raspi-ns'
+#azure_servicebus_key_name = 'RootManageSharedAccessKey'
+#azure_servicebus_key_value = 'akI02tTnZP6N+XDqRQfQV2ynATN+bB0O/tuPIXpiMdU='
+#azure_servicebus_queue = 'obe-raspi'
+sleep_time = 1.0
+openiot_outbound = 'amqps://device:uWk12lmS00SnItMUzJgRd18oYi%2BfpFqmQGR%2BKbUb1%2BI%3D@iot-dev-ns.servicebus.chinacloudapi.cn/dev'
+openiot_hardware_id = 'B8:27:EB:FB:47:08'
+openiot_spec_id = '7dfd6d63-5e8d-4380-be04-fc5c73801dfb'
+
+# Parse arguments
 try:
-   opts, args = getopt.getopt(sys.argv[1:], "n:k:c:p:b:v:q:s:")
+#   opts, args = getopt.getopt(sys.argv[1:], "n:k:c:p:b:v:q:s:")
+   opts, args = getopt.getopt(sys.argv[1:], "s:")
 except getopt.GetoptError:
-   print 'Argument error! Usage: azure_storage.py -n account_name -k account_key -c container_name -p servicebus_namespace -b servicebus_keyname -v servicebus_keyvalue -q servicebus_queue -s sleep_second'
+   print 'Argument error!'
    logging.debug('Argument error!')
    sys.exit(2)
 for opt, arg in opts:
-   if opt == '-n':
-      azure_storage_acct_name = arg
-   elif opt == '-k':
-      azure_storage_acct_key = arg
-   elif opt == '-c':
-      azure_storage_acct_container = arg
-   elif opt == '-p':
-      azure_servicebus_namespace = arg
-   elif opt == '-b':
-      azure_servicebus_key_name = arg
-   elif opt == '-v':
-      azure_servicebus_key_value = arg
-   elif opt == '-q':
-      azure_servicebus_queue = arg
-   elif opt == '-s':
+   if opt == '-s':
       sleep_time = float(arg)
+#   elif opt == '-n':
+#      azure_storage_acct_name = arg
+#   elif opt == '-k':
+#      azure_storage_acct_key = arg
+#   elif opt == '-c':
+#      azure_storage_acct_container = arg
+#   elif opt == '-p':
+#      azure_servicebus_namespace = arg
+#   elif opt == '-b':
+#      azure_servicebus_key_name = arg
+#   elif opt == '-v':
+#      azure_servicebus_key_value = arg
+#   elif opt == '-q':
+#      azure_servicebus_queue = arg
 blob_service = BlobService(account_name=azure_storage_acct_name, account_key=azure_storage_acct_key)
 logging.debug('Azure storage connection created.')
-bus_service = ServiceBusService(service_namespace=azure_servicebus_namespace, shared_access_key_name=azure_servicebus_key_name, shared_access_key_value=azure_servicebus_key_value)
-logging.debug('Azure service bus connection created.')
+#bus_service = ServiceBusService(service_namespace=azure_servicebus_namespace, shared_access_key_name=azure_servicebus_key_name, shared_access_key_value=azure_servicebus_key_value)
+#logging.debug('Azure service bus connection created.')
 
 # Define method to get the oldest file
 # Set _invert to True for getting the youngest file
@@ -73,20 +79,24 @@ while True:
    if img_filefullpath is None:
       # There is no image to upload, so sleep
       logging.debug('Image directory is empty.')
-      time.sleep(sleep_time)
+      time.sleep(1)
    else:
       img_filename = os.path.basename(img_filefullpath)
       # Upload the oldest image
       blob_service.put_block_blob_from_path(azure_storage_acct_container, img_filename, img_filefullpath, x_ms_blob_content_type='image/jpeg')
-      img_azureblob_url = 'http://'+azure_storage_acct_name+'.blob.core.windows.net/'+azure_storage_acct_container+'/'+img_filename
-      logging.debug('Uploaded to %s', img_azureblob_url)
-      msg = Message(img_azureblob_url)
-      bus_service.send_queue_message(azure_servicebus_queue, msg)
+      img_azureblob_url = azure_storage_acct_name+'.blob.core.windows.net/'+azure_storage_acct_container+'/'+img_filename
+      logging.debug('Uploaded to http://%s', img_azureblob_url)
+#      msg = Message(img_azureblob_url)
+#      bus_service.send_queue_message(azure_servicebus_queue, msg)
+      msg = 'info.newImageUploaded:' + img_azureblob_url
+      subprocess.call(["./openiot-agent.bin", "-o", openiot_outbound, "-i", openiot_hardware_id, "-s", openiot_spec_id, "-a", msg])
       # Remove the image after uploading
       os.remove(img_filefullpath)
       # If need to sleep for more than 1 second, sleep
-      #if sleep_time > 1:
-      #   time.sleep(sleep_time-1)
+#      if sleep_time > 1:
+#         time.sleep(sleep_time-1)
+
+# REST ARE ALL TEST CODE
 
 # List all blobs
 #blobs = blob_service.list_blobs('public')
