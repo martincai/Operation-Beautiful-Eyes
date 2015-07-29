@@ -1,69 +1,33 @@
-﻿<!DOCTYPE html>
-<html>
-	<head>
-	<title>Add a person</title>
-	<style type="text/css">
-	#back{
-		position:absolute; 
-		top:50%; 
-		left:50%; 
-		margin:-300px 0 0 -250px; 
-		width:500px; 
-		height:500px; 
-		border:5px solid blue; 
-	}
-	#person{
-		position:absolute; 
-		top:50%; 
-		left:50%; 
-		margin:-110px 0 0 -120px; 
-		border:1px solid white; 
-	}
-	</style>
-	</head>
-	<body >
-		<div id="back">
-			<form id="form1"  action="oxford.php">
-			<script language="javascript" type="text/javascript">
-				var count=0 ;
-				function additem(id)
-				{
-					var row,cell,str;
-					row = document.getElementById(id).insertRow();
-					if(row != null )
-					{
-				cell = row.insertCell();
-				cell.innerHTML="<input id=\"St"+count+"\" type=\"text\" name=\"St"+count+"\" value= \"St"+count+"\"><input type=\"button\" value=\"delete\" onclick=\'deleteitem(this);\'>";
-				count ++;
-					}
-				}
-				function deleteitem(obj)
-				{
-					var curRow = obj.parentNode.parentNode;
-					tb.deleteRow(curRow.rowIndex);
-				}
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>上传图片</title>
+</head>
 
-				function getsub()
-				{
-				var re="";
-				for (var    i = 0 ;i<count;i++)
-				{
-				 
-				  re += document.getElementsByName("St"+i)[0].value;
-				  re+="@";
-				}
-				document.getElementById("Hidden1").value=re;
-				}
-			</script>
-			<div align=center id="person">
-			PersonName:<input name="personName"><br/><br/>
-			图片URL:<br/><br/>
-			<table id="tb"></table>
-			<input name="add" type="button" style="width:100px;height:50px" onclick='additem("tb")' value="add"/>&nbsp;&nbsp;<input type="submit" name="submit" onclick="getsub()"" value="submit"/>
-					<input id="Hidden1" name="urls" type="hidden" value="" />
-			</div>
-			</form>
-			
-		</div>
-	</body>
+<body>
+<div  align="center" style="width:50%; height:300px; font-size:13px">
+<h3>创建一个Person</h3>
+<script language="javascript">
+function go_up(){	
+    document.getElementById('new_up').innerHTML+='请选择图片：<input type="file" name="upfile[]" align="center"/><br><br>';
+}
+</script>
+<form name="frm" method="post" enctype="multipart/form-data" action="img.php">
+PersonName: <input name="personName" type="text" align="center"/><br/><br/>
+<font style="letter-spacing:1px" color="#FF0000">*只允许上传jpg|png|bmp|pjpeg|gif格式的图片</font><br><br>
+<div id="new_up">
+请选择图片：
+ <input name='upfile[]' type='file' align="center"/><br><br>
+请选择图片：
+ <input name='upfile[]' type='file' align="center"/><br><br>
+请选择图片：
+ <input name='upfile[]' type='file' align="center"/><br><br>
+ </div>
+ <br/>
+ <br/>
+ <input type="button"" name="add_img" value="继续添加" onclick="go_up()"/><br><br/><br/>  <input name="tijiao" type="submit" value="上传" /><br />
+</form>
+</div>
+</body>
 </html>

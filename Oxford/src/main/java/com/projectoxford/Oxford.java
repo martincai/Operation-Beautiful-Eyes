@@ -3,7 +3,6 @@ package com.projectoxford;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import com.alibaba.fastjson.JSON;
 import com.obe.bean.Candidate;
 import com.obe.bean.Identification_result;
 import com.obe.bean.Person;
@@ -24,7 +23,7 @@ public class Oxford {
 		 	Candidate[] candidates=result.getCandidates();
 		 	    
 		 	if(candidates.length==0){
-		 	    	return "No";
+		 	    	return "no";
 		 	    }else{
 		 	        float max=0.0f;
 		 	        int indice=0;
@@ -42,16 +41,17 @@ public class Oxford {
  	    	Date date=new Date();
  	    	DateFormat format=new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
  			String Currenttime=format.format(date);
- 			CatchData catchData=new CatchData();
+			CatchData catchData=new CatchData();
  			catchData.setImageUrl(imageUrl);
- 			catchData.setTime(Currenttime);
+ 		    catchData.setTime(Currenttime);
  			catchData.setName(name);
- 			catchData.setConfidence(candidate.getConfidence()); 	   	    
- 	   	    String json_str=JSON.toJSONString(catchData);
+ 			catchData.setPersonId(personId);
+ 			catchData.setConfidence(candidate.getConfidence()); 
+            String json_str=Json.toJsonString(catchData);			
  	    	return json_str;	    
 		 	    }
  	    }else{
- 	    	 return "No";
+ 	    	 return "no";
  	    }
     }
 }
